@@ -18,7 +18,7 @@ const TransactionSchema = new mongoose.Schema({
   accountName: { type: String, required: true },
   category: { type: String, required: true },
   description: { type: String },
-  date: { type: String, required: true },
+  date: { type: Date, required: true },
 });
 
 const Transaction = mongoose.model("Transaction", TransactionSchema);

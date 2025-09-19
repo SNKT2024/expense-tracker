@@ -1,4 +1,4 @@
-import { Navigate, Route, Routes } from "react-router";
+import { Navigate, Route, Routes } from "react-router-dom";
 import "./App.css";
 import MainLayout from "./layouts/MainLayout";
 import Dashboard from "./features/dashboard/Dashboard";
@@ -26,49 +26,15 @@ function App() {
             </ProtectedRoutes>
           }
         >
-          <Route
-            index
-            element={
-              <ProtectedRoutes>
-                <Dashboard />
-              </ProtectedRoutes>
-            }
-          />
-
-          <Route
-            path="/accounts"
-            element={
-              <ProtectedRoutes>
-                <Accounts />
-              </ProtectedRoutes>
-            }
-          />
-          <Route
-            path="/add-account"
-            element={
-              <ProtectedRoutes>
-                <AddAccount />
-              </ProtectedRoutes>
-            }
-          />
-          <Route
-            path="/transactions"
-            element={
-              <ProtectedRoutes>
-                <Transactions />
-              </ProtectedRoutes>
-            }
-          />
-          <Route
-            path="/add-transaction"
-            element={
-              <ProtectedRoutes>
-                <AddTransaction />
-              </ProtectedRoutes>
-            }
-          />
+          <Route index element={<Dashboard />} />
+          <Route path="accounts" element={<Accounts />} />
+          <Route path="add-account" element={<AddAccount />} />
+          <Route path="transactions" element={<Transactions />} />
+          <Route path="add-transaction" element={<AddTransaction />} />
         </Route>
-        <Route path="*" element={<Navigate to="/login" replace />} />
+
+        {/* Fallback Route */}
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </>
   );

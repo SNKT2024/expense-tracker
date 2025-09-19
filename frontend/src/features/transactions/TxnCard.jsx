@@ -9,18 +9,6 @@ function TxnCard({ transactions, onEdit, onDelete }) {
     setOpenTxn(openTxn === txnId ? null : txnId);
   };
 
-  // Group transactions by date
-  const grouped = transactions.reduce((groups, txn) => {
-    const dateKey = new Date(txn.date).toLocaleDateString("en-IN", {
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-    });
-    if (!groups[dateKey]) groups[dateKey] = [];
-    groups[dateKey].push(txn);
-    return groups;
-  }, {});
-
   const formatTime = (dateString) => {
     return new Date(dateString).toLocaleString("en-IN", {
       hour: "numeric",
@@ -30,17 +18,32 @@ function TxnCard({ transactions, onEdit, onDelete }) {
   };
 
   const calculateDailySummary = (txns) => {
-    const expense = txns
-      .filter((t) => t.transactionType === "expense")
-      .reduce((sum, t) => sum + Number(t.amount), 0);
-    const income = txns
-      .filter((t) => t.transactionType === "income")
-      .reduce((sum, t) => sum + Number(t.amount), 0);
-    const gap = income - expense;
-    return { income, expense, gap };
+    let income = 0,
+      expense = 0;
+
+    txns.forEach((txn) => {
+      if (txn.transactionType === "income") income += Number(txn.amount);
+      else if (txn.transactionType === "expense") expense += Number(txn.amount);
+    });
+
+    const shortfall = expense - income;
+    const balance = expense - shortfall; // same logic as Spent
+
+    return { income, expense, shortfall, balance };
   };
 
-  if (transactions.length === 0) {
+  const groupedTransactions = transactions.reduce((acc, txn) => {
+    const dateKey = new Date(txn.date).toLocaleDateString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+    if (!acc[dateKey]) acc[dateKey] = [];
+    acc[dateKey].push(txn);
+    return acc;
+  }, {});
+
+  if (!transactions || transactions.length === 0) {
     return (
       <div className="px-3 py-3 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 transition w-fit mx-auto">
         <Link to={"/add-transaction"}>Create Your First Transaction</Link>
@@ -50,8 +53,10 @@ function TxnCard({ transactions, onEdit, onDelete }) {
 
   return (
     <>
-      {Object.keys(grouped).map((dateKey) => {
-        const dailySummary = calculateDailySummary(grouped[dateKey]);
+      {Object.keys(groupedTransactions).map((dateKey) => {
+        const dailySummary = calculateDailySummary(
+          groupedTransactions[dateKey]
+        );
 
         return (
           <div
@@ -63,8 +68,8 @@ function TxnCard({ transactions, onEdit, onDelete }) {
             </h2>
 
             <div className="space-y-4">
-              {grouped[dateKey].map((txn) => (
-                <div key={txn._id} className="border-b border-gray-200 py-2">
+              {groupedTransactions[dateKey].map((txn) => (
+                <div key={txn._id} className=" border-gray-200 py-2">
                   <div className="flex justify-between items-start">
                     <div className="flex flex-col">
                       <span className="text-gray-800 font-medium">
@@ -131,15 +136,18 @@ function TxnCard({ transactions, onEdit, onDelete }) {
                     </div>
                   </div>
 
-                  {openTxn === txn._id && txn.description && (
+                  {openTxn === txn._id && (
                     <div className="mt-2 text-xs text-gray-600 bg-gray-50 p-2 rounded">
-                      {txn.description}
+                      {txn.description && txn.description.trim().length > 0
+                        ? txn.description
+                        : "No Description Added"}
                     </div>
                   )}
                 </div>
               ))}
             </div>
 
+            {/* Daily Summary */}
             <div className="mt-3 pt-2 border-t border-gray-300 flex justify-between text-sm">
               <div className="flex flex-col text-left">
                 <span className="text-green-600 font-medium">
@@ -150,7 +158,7 @@ function TxnCard({ transactions, onEdit, onDelete }) {
                 </span>
               </div>
               <span className="font-bold text-blue-600 self-center">
-                Balance: ₹{dailySummary.gap}
+                Balance: ₹{dailySummary.balance}
               </span>
             </div>
           </div>

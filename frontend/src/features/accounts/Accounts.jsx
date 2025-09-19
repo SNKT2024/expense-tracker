@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import apiClient from "../../utils/axiosInstance";
-import { Link } from "react-router";
 
 function Accounts() {
   const [accounts, setAccounts] = useState([]);
@@ -10,8 +10,8 @@ function Accounts() {
   useEffect(() => {
     const fetchAccounts = async () => {
       try {
-        const res = await apiClient.get("api/account/user-accounts");
-        setAccounts(res.data?.data || []);
+        const { data } = await apiClient.get("/api/accounts");
+        setAccounts(data.data);
       } catch (err) {
         setError("Failed to fetch accounts");
       } finally {

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import apiClient from "../../utils/axiosInstance";
-import { useLocation, useNavigate } from "react-router";
 
 function AddTransaction() {
   const [accounts, setAccounts] = useState([]);
@@ -8,10 +8,6 @@ function AddTransaction() {
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const location = useLocation();
-
-  const from = location.state?.from?.pathname || "/";
-
   const [formData, setFormData] = useState({
     name: "",
     transactionType: "",
@@ -20,19 +16,14 @@ function AddTransaction() {
     account: "",
     category: "",
     description: "",
-    date: "",
+    date: new Date(),
   });
 
-  // Fetch accounts on mount
   useEffect(() => {
     const fetchAccounts = async () => {
       try {
-        const res = await apiClient.get("/api/account/user-accounts");
-        if (res.data?.data) {
-          setAccounts(res.data.data || []);
-        } else {
-          setError(res.data?.msg || "Failed to fetch accounts");
-        }
+        const { data } = await apiClient.get("/api/accounts");
+        setAccounts(data.data);
       } catch (err) {
         setError("Error fetching accounts");
       }
@@ -40,68 +31,38 @@ function AddTransaction() {
     fetchAccounts();
   }, []);
 
-  // Handle changes
   const handleChange = (e) => {
     const { id, value } = e.target;
-    setFormData((prev) => ({ ...prev, [id]: value }));
 
-    // Autofill on account change
+    // If user selects an account, auto-update paymentMethod
     if (id === "account") {
-      const selectedAcc = accounts.find((acc) => acc._id === value);
-      if (selectedAcc) {
+      const selectedAccount = accounts.find((acc) => acc._id === value);
+      if (selectedAccount) {
         setFormData((prev) => ({
           ...prev,
-          account: selectedAcc._id,
-          paymentMethod: selectedAcc.type === "cash" ? "cash" : "upi",
+          [id]: value,
+          paymentMethod:
+            selectedAccount.type.toLowerCase() === "bank" ? "upi" : "cash",
         }));
+        return;
       }
     }
+
+    setFormData((prev) => ({ ...prev, [id]: value }));
   };
 
-  // Submit form
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
     setError("");
     setSuccess("");
-    setLoading(true);
 
     try {
-      const payload = {
-        ...formData,
-        amount: Number(formData.amount),
-        description:
-          formData.description && formData.description.trim() !== ""
-            ? formData.description
-            : "No description added",
-        date:
-          formData.date && formData.date.trim() !== ""
-            ? formData.date
-            : new Date().toISOString().split("T")[0],
-      };
-
-      const res = await apiClient.post(
-        "/api/transaction/add-transaction",
-        payload
-      );
+      await apiClient.post("/api/transactions", formData);
+      setSuccess("Transaction added successfully!");
       setTimeout(() => {
-        navigate(from, { replace: true });
+        navigate("/");
       }, 1000);
-
-      if (res.data?.status) {
-        setSuccess(res.data.msg || "Transaction added successfully!");
-        setFormData({
-          name: "",
-          transactionType: "",
-          paymentMethod: "",
-          amount: "",
-          account: "",
-          category: "",
-          description: "",
-          date: "",
-        });
-      } else {
-        setError(res.data?.msg || "Failed to add transaction");
-      }
     } catch (err) {
       setError("Something went wrong while adding transaction");
     } finally {
@@ -206,8 +167,8 @@ function AddTransaction() {
             className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 transition bg-white"
             required
           >
-            <option value="" disabled>
-              Select a type
+            <option value="" defaultValue selected disabled>
+              Select Type
             </option>
             <option value="income">Income</option>
             <option value="expense">Expense</option>
@@ -252,11 +213,11 @@ function AddTransaction() {
             <option value="Food">Food</option>
             <option value="Grocery">Grocery</option>
             <option value="Travel">Travel</option>
-            <option value="Outgoing">Outgoing</option>
-            <option value="Movie">Movie</option>
+            <option value="Bills">Bills</option>
+            <option value="Entertainment">Entertainment</option>
             <option value="Shopping">Shopping</option>
-            <option value="Self">Self</option>
-            <option value="Others">Others</option>
+            <option value="Health">Health</option>
+            <option value="Other">Other</option>
           </select>
         </div>
 
@@ -268,6 +229,7 @@ function AddTransaction() {
           >
             Payment Method
           </label>
+
           <select
             id="paymentMethod"
             value={formData.paymentMethod}
@@ -275,8 +237,8 @@ function AddTransaction() {
             className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 transition bg-white"
             required
           >
-            <option value="" disabled>
-              Select a method
+            <option value="" defaultValue selected disabled>
+              Select Method
             </option>
             <option value="upi">UPI</option>
             <option value="cash">Cash</option>

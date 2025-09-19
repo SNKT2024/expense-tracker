@@ -9,11 +9,10 @@ function Transactions() {
   const [deleteTxn, setDeleteTxn] = useState(null);
   const [editTxn, setEditTxn] = useState(null);
 
-  // Fetch transactions from backend
   const getUserTransactions = async () => {
     try {
-      const res = await apiClient.get("/api/transaction/get-transactions");
-      setTransactions(res.data.data || []);
+      const { data } = await apiClient.get("/api/transactions");
+      setTransactions(data.data);
     } catch (err) {
       console.error(err);
     }
@@ -23,10 +22,9 @@ function Transactions() {
     getUserTransactions();
   }, []);
 
-  // Handle delete
   const handleDelete = async (id) => {
     try {
-      await apiClient.delete(`/api/transaction/${id}`);
+      await apiClient.delete(`/api/transactions/${id}`);
       setTransactions((prev) => prev.filter((t) => t._id !== id));
     } catch (err) {
       console.error(err);
@@ -35,14 +33,13 @@ function Transactions() {
     }
   };
 
-  // Handle edit/save
   const handleEditSave = async (updatedTxn) => {
     try {
-      const res = await apiClient.put(
-        `/api/transaction/${updatedTxn._id}`,
+      const { data } = await apiClient.put(
+        `/api/transactions/${updatedTxn._id}`,
         updatedTxn
       );
-      const newTxn = res.data.data;
+      const newTxn = data.data;
       setTransactions((prev) =>
         prev.map((t) => (t._id === newTxn._id ? newTxn : t))
       );

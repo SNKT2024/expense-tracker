@@ -1,83 +1,39 @@
 import React, { useState } from "react";
-import useUser from "../../hooks/getUserData";
+import { useNavigate } from "react-router-dom";
 import apiClient from "../../utils/axiosInstance";
-import { updateAccounts } from "../../hooks/getUserData";
-import { useLocation, useNavigate } from "react-router";
 
 function AddAccount() {
-  const user = useUser();
   const navigate = useNavigate();
-  const location = useLocation();
-
-  const from = location.state?.from?.pathname || "/";
-  const fromAcc = location.state?.from?.pathname || "/accounts";
-
   const [formData, setFormData] = useState({
-    user: "",
     name: "",
     type: "",
     balance: "",
   });
-
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
-    setError("");
-    setSuccess("");
     setFormData({ ...formData, [e.target.id]: e.target.value });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    if (!formData.name || !formData.type || !formData.balance) {
-      setError("Please fill in all required fields");
-      return;
-    }
-
-    if (!user || !user._id) {
-      setError("User not found. Please log in again.");
-      return;
-    }
-
     setLoading(true);
+    setError("");
+    setSuccess("");
+
     try {
-      const res = await apiClient.post(`api/account/add-account`, formData);
-
-      if (res.data?.success === false || !res.data?.data?._id) {
-        setError(res.data?.msg || "Account creation failed");
-        setLoading(false);
-        return;
-      }
-
-      const newAccId = res.data.data._id;
-      updateAccounts(newAccId);
-
-      setSuccess(res.data.msg || "Account added successfully!");
-
+      await apiClient.post("/api/accounts", formData);
+      setSuccess("Account added successfully!");
       setTimeout(() => {
-        navigate(from, { replace: true });
+        navigate("/accounts");
       }, 1000);
     } catch (error) {
-      console.error(error);
-      setError("Something went wrong while adding account");
+      setError(error.response.data.msg);
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleCancel = () => {
-    setFormData({
-      user: "",
-      name: "",
-      type: "",
-      balance: "",
-    });
-    setError("");
-    setSuccess("");
-    navigate(fromAcc, { replace: true });
   };
 
   return (
@@ -132,7 +88,7 @@ function AddAccount() {
             required
           >
             <option value="" disabled>
-              Select a type
+              Select account type
             </option>
             <option value="bank">Bank</option>
             <option value="cash">Cash</option>
@@ -166,18 +122,6 @@ function AddAccount() {
         >
           {loading ? "Saving..." : "Save Account"}
         </button>
-
-        {user?.accounts?.length ? (
-          <p className="text-center text-sm text-gray-600">
-            <button
-              type="button"
-              onClick={handleCancel}
-              className="font-medium text-indigo-600 hover:text-indigo-500 focus:outline-none"
-            >
-              Cancel
-            </button>
-          </p>
-        ) : null}
       </form>
     </div>
   );

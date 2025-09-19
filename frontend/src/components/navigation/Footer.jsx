@@ -24,13 +24,28 @@ function Footer() {
         <FaPlus size={18} />
       </Link>
 
-      <Link to={"/report"} className="text-gray-600 hover:text-indigo-600">
-        <BiSolidReport size={22} />
-      </Link>
-
-      <Link to={"/settings"} className="text-gray-600 hover:text-indigo-600">
-        <IoMdSettings size={22} />
-      </Link>
+      <div className="relative group">
+        <button
+          disabled
+          className="text-gray-400 cursor-not-allowed p-2 rounded"
+        >
+          <BiSolidReport size={22} />
+        </button>
+        <span className="absolute bottom-full mb-2 hidden group-hover:block text-xs text-white bg-black px-2 py-1 rounded">
+          Coming Soon
+        </span>
+      </div>
+      <div className="relative group">
+        <button
+          disabled
+          className="text-gray-400 cursor-not-allowed p-2 rounded"
+        >
+          <IoMdSettings size={22} />
+        </button>
+        <span className="absolute bottom-full mb-2 hidden group-hover:block text-xs text-white bg-black px-2 py-1 rounded">
+          Coming Soon
+        </span>
+      </div>
     </div>
   );
 }

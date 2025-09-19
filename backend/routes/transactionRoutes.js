@@ -5,23 +5,16 @@ const {
   getUserAllTransaction,
   updateTransaction,
   deleteTransaction,
-
   getTransactions,
-} = require("../controllers/transactionControllers");
+  getSevenDays,
+} = require("../controllers/transactionController");
 const router = express.Router();
 
-// add transaction
-router.post("/add-transaction", verifyToken, addTransaction);
-
-// get user all transaction
-router.get("/get-transactions", verifyToken, getUserAllTransaction);
-
-// update
+router.post("/", verifyToken, addTransaction);
+router.get("/", verifyToken, getUserAllTransaction);
 router.put("/:id", verifyToken, updateTransaction);
-// delete
 router.delete("/:id", verifyToken, deleteTransaction);
-
-// getAvg
-router.get("/get-average", verifyToken, getTransactions);
+router.get("/monthly", verifyToken, getTransactions);
+router.get("/weekly", verifyToken, getSevenDays);
 
 module.exports = router;

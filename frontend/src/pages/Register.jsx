@@ -1,9 +1,10 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import apiClient from "../utils/axiosInstance";
-import { useLocation, useNavigate } from "react-router";
-import { Link } from "react-router";
 
-function App() {
+import { Link } from "react-router-dom";
+
+function Register() {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -13,34 +14,25 @@ function App() {
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const location = useLocation();
-
-  const from = location.state?.from?.pathname || "/dashboard";
 
   const handleChange = (e) => {
-    setError("");
-    setSuccess("");
     setFormData({ ...formData, [e.target.id]: e.target.value });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
     setError("");
     setSuccess("");
-    setLoading(true);
 
     try {
-      const res = await apiClient.post("api/user/register", formData);
-
-      setSuccess(res.data.msg || "Registration successful!");
-      setFormData({ name: "", email: "", password: "" });
-      navigate(from, { replace: true });
+      await apiClient.post("/api/users/register", formData);
+      setSuccess("Registration successful!");
+      setTimeout(() => {
+        navigate("/login");
+      }, 1000);
     } catch (err) {
-      const errorMessage =
-        err.response?.data?.msg ||
-        "An unexpected error occurred. Please try again.";
-      setError(errorMessage);
-      console.error("Registration Failed:", errorMessage);
+      setError(err.response.data.msg);
     } finally {
       setLoading(false);
     }
@@ -54,7 +46,6 @@ function App() {
             Register
           </h2>
 
-          {/* Error Message Display */}
           {error && (
             <div
               className="bg-red-100 border-l-4 border-red-500 text-red-700 px-4 py-3 rounded-md text-sm"
@@ -64,7 +55,6 @@ function App() {
             </div>
           )}
 
-          {/* Success Message Display */}
           {success && (
             <div
               className="bg-green-100 border-l-4 border-green-500 text-green-700 px-4 py-3 rounded-md text-sm"
@@ -129,7 +119,7 @@ function App() {
         </form>
         <Link to={"/login"}>
           <h6 className=" font-medium text-center text-blue-800 mt-4">
-            Already Registerd?
+            Already Registered?
           </h6>
         </Link>
       </div>
@@ -137,4 +127,4 @@ function App() {
   );
 }
 
-export default App;
+export default Register;
